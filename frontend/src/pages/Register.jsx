@@ -12,6 +12,32 @@ export function Register() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  function formatRegisterError(data) {
+    if (!data) return 'Ошибка регистрации'
+    if (typeof data === 'string') return data
+    if (data.detail) return data.detail
+
+    const messages = []
+
+    if (Array.isArray(data.email) && data.email.length) {
+      if (String(data.email[0]).includes('already exists')) {
+        messages.push('Пользователь с таким email уже существует')
+      } else {
+        messages.push(data.email[0])
+      }
+    }
+
+    if (Array.isArray(data.password) && data.password.length) {
+      if (String(data.password[0]).toLowerCase().includes('at least 6')) {
+        messages.push('Пароль должен быть минимум 6 символов')
+      } else {
+        messages.push(data.password[0])
+      }
+    }
+
+    return messages.length ? messages.join('. ') : JSON.stringify(data)
+  }
+
   async function onSubmit(e) {
     e.preventDefault()
     setError('')
@@ -26,12 +52,7 @@ export function Register() {
       })
       navigate('/login')
     } catch (err) {
-      const data = err?.response?.data
-      const msg =
-        data?.detail ||
-        (data && typeof data === 'object' ? JSON.stringify(data) : '') ||
-        'Ошибка регистрации'
-      setError(msg)
+      setError(formatRegisterError(err?.response?.data))
     } finally {
       setLoading(false)
     }

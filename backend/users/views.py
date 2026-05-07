@@ -15,6 +15,3 @@ class MeView(APIView):
 
     def get(self, request):
         return Response(UserSerializer(request.user).data)
-from django.shortcuts import render
-
-# Create your views here.

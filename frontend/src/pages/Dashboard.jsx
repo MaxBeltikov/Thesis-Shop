@@ -38,7 +38,7 @@ export function Dashboard() {
   return (
     <div className="page">
       <div className="card">
-        <h1>Dashboard</h1>
+        <h1>Профиль</h1>
         {loading ? (
           <p className="muted">Загрузка…</p>
         ) : error ? (

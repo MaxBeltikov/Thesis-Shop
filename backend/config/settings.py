@@ -20,7 +20,8 @@ from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-load_dotenv(BASE_DIR / ".env")
+# Важно: override=True чтобы значения из .env не перебивались старым окружением
+load_dotenv(BASE_DIR / ".env", override=True)
 
 
 # Quick-start development settings - unsuitable for production
@@ -52,6 +53,9 @@ INSTALLED_APPS = [
 
     # Local
     'users',
+    'catalog',
+    'orders',
+    'documents',
 ]
 
 MIDDLEWARE = [
@@ -92,7 +96,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': os.getenv("DB_ENGINE", "django.db.backends.postgresql"),
-        'NAME': os.getenv("POSTGRES_DB", "ecommerce"),
+        'NAME': os.getenv("POSTGRES_DB", "ecommerce_db"),
         'USER': os.getenv("POSTGRES_USER", "postgres"),
         'PASSWORD': os.getenv("POSTGRES_PASSWORD", "postgres"),
         'HOST': os.getenv("POSTGRES_HOST", "localhost"),
