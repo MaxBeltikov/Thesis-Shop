@@ -8,6 +8,7 @@
 
 ```powershell
 cd <папка_проекта>
+copy .env.example .env
 docker compose up --build
 ```
 

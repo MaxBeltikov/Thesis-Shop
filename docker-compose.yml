@@ -3,9 +3,9 @@ services:
     image: postgres:16-alpine
     container_name: ecommerce_postgres
     environment:
-      POSTGRES_DB: ecommerce_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "5415"
+      POSTGRES_DB: ${POSTGRES_DB:-ecommerce_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-5415}
     ports:
       - "5432:5432"
     volumes:
@@ -25,13 +25,13 @@ services:
       DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1"
       CORS_ALLOW_ALL_ORIGINS: "1"
       DB_ENGINE: "django.db.backends.postgresql"
-      POSTGRES_DB: "ecommerce_db"
-      POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "5415"
+      POSTGRES_DB: "${POSTGRES_DB:-ecommerce_db}"
+      POSTGRES_USER: "${POSTGRES_USER:-postgres}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-5415}"
       POSTGRES_HOST: "db"
       POSTGRES_PORT: "5432"
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-8000}:8000"
     depends_on:
       db:
         condition: service_healthy
@@ -46,7 +46,7 @@ services:
         VITE_API_BASE_URL: "/api"
     container_name: ecommerce_frontend
     ports:
-      - "5173:80"
+      - "${FRONTEND_PORT:-5173}:80"
     depends_on:
       - backend
 
