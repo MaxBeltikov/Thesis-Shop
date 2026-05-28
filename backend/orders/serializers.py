@@ -4,6 +4,8 @@ from decimal import Decimal
 from django.utils import timezone
 from rest_framework import serializers
 
+from documents.services.workflow import ORDER_COMPLETED_STATUSES, auto_create_act_for_order
+from users.audit import log_action
 from users.permissions import is_manager_or_admin
 
 from .models import Order, OrderItem
@@ -50,6 +52,11 @@ class OrderSerializer(serializers.ModelSerializer):
             "completed_at",
         ]
         read_only_fields = ["id", "total_amount", "created_at", "updated_at", "client_email", "manager_email"]
+        extra_kwargs = {
+            "number": {"required": False, "allow_blank": True},
+            "client": {"required": False},
+            "manager": {"required": False},
+        }
 
     def validate_items(self, value):
         if not value:
@@ -105,6 +112,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         items_data = validated_data.pop("items", None)
+        old_status = instance.status
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
@@ -112,4 +120,25 @@ class OrderSerializer(serializers.ModelSerializer):
             total = self._sync_items(instance, items_data)
             instance.total_amount = total
             instance.save(update_fields=["total_amount"])
+
+        new_status = (instance.status or "").lower()
+        if (
+            old_status.lower() not in ORDER_COMPLETED_STATUSES
+            and new_status in ORDER_COMPLETED_STATUSES
+        ):
+            if not instance.completed_at:
+                instance.completed_at = timezone.now()
+                instance.save(update_fields=["completed_at"])
+            request = self.context.get("request")
+            user = request.user if request else instance.client
+            act = auto_create_act_for_order(instance, user)
+            if act and request:
+                log_action(
+                    user,
+                    "auto_create_act",
+                    "document",
+                    act.pk,
+                    request,
+                    details={"order_id": instance.pk},
+                )
         return instance

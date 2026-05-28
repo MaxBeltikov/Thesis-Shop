@@ -17,7 +17,7 @@ export function Login() {
     try {
       const res = await api.post('/auth/login/', { email, password })
       saveTokens(res.data)
-      navigate('/dashboard')
+      navigate('/orders')
     } catch (err) {
       const msg =
         err?.response?.data?.detail ||

@@ -1,0 +1,26 @@
+[
+  {
+    "model": "users.role",
+    "pk": 1,
+    "fields": {
+      "name": "client",
+      "description": "Клиент"
+    }
+  },
+  {
+    "model": "users.role",
+    "pk": 2,
+    "fields": {
+      "name": "manager",
+      "description": "Менеджер"
+    }
+  },
+  {
+    "model": "users.role",
+    "pk": 3,
+    "fields": {
+      "name": "admin",
+      "description": "Администратор"
+    }
+  }
+]

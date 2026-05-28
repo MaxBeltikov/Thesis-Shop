@@ -1,5 +1,8 @@
-from rest_framework import viewsets
+from rest_framework import filters, viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
+from documents.serializers import DocumentSerializer
 from users.audit import log_action
 from users.permissions import IsOrderParticipantOrManager
 
@@ -10,6 +13,8 @@ from .serializers import OrderSerializer
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
     permission_classes = [IsOrderParticipantOrManager]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["number", "status", "client__email", "manager__email"]
 
     def get_queryset(self):
         qs = Order.objects.select_related("client", "manager").prefetch_related("items__product")
@@ -39,3 +44,13 @@ class OrderViewSet(viewsets.ModelViewSet):
         pk = instance.pk
         instance.delete()
         log_action(self.request.user, "delete", "order", pk, self.request)
+
+    @action(detail=True, methods=["get"], url_path="documents")
+    def documents(self, request, pk=None):
+        """GET /api/orders/{id}/documents/ — документы заказа."""
+        order = self.get_object()
+        docs = order.documents.select_related(
+            "template", "created_by", "signed_by", "responsible", "parent"
+        ).order_by("-created_at")
+        serializer = DocumentSerializer(docs, many=True, context={"request": request})
+        return Response(serializer.data)
