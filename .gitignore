@@ -234,6 +234,10 @@ venv/
 .env
 backend/.env
 
+# Django media (generated documents/uploads)
+backend/media/**
+!backend/media/**/.gitkeep
+
 # Django / local DB
 *.sqlite3
 ecommerce
