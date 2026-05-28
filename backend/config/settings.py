@@ -33,7 +33,7 @@ SECRET_KEY = 'django-insecure-^0#he5=k^%slv@lmkefnlyp840-)pn3!d_quw9b7@=a*i0x#6w
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+ALLOWED_HOSTS = [h.strip() for h in os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()]
 
 
 # Application definition
@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'catalog',
     'orders',
     'documents',
+    'reports',
 ]
 
 MIDDLEWARE = [
@@ -93,16 +94,26 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': os.getenv("DB_ENGINE", "django.db.backends.postgresql"),
-        'NAME': os.getenv("POSTGRES_DB", "ecommerce_db"),
-        'USER': os.getenv("POSTGRES_USER", "postgres"),
-        'PASSWORD': os.getenv("POSTGRES_PASSWORD", "postgres"),
-        'HOST': os.getenv("POSTGRES_HOST", "localhost"),
-        'PORT': os.getenv("POSTGRES_PORT", "5432"),
+_db_engine = os.getenv("DB_ENGINE", "django.db.backends.postgresql")
+
+if _db_engine == "django.db.backends.sqlite3":
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / os.getenv("SQLITE_NAME", "db.sqlite3"),
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": _db_engine,
+            "NAME": os.getenv("POSTGRES_DB", "ecommerce_db"),
+            "USER": os.getenv("POSTGRES_USER", "postgres"),
+            "PASSWORD": os.getenv("POSTGRES_PASSWORD", "postgres"),
+            "HOST": os.getenv("POSTGRES_HOST", "localhost"),
+            "PORT": os.getenv("POSTGRES_PORT", "5432"),
+        }
+    }
 
 AUTH_USER_MODEL = "users.User"
 
@@ -110,10 +121,15 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
 ]
 
+# Allow any origin in dockerized demo setup (frontend served by nginx container).
+# This is for local demo only; tighten in production.
+CORS_ALLOW_ALL_ORIGINS = os.getenv("CORS_ALLOW_ALL_ORIGINS", "0") == "1"
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
 }
 
 SIMPLE_JWT = {
@@ -157,6 +173,16 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
+# Реквизиты продавца в шапке счетов/актов/КП (можно переопределить в .env)
+COMPANY_NAME = os.getenv("COMPANY_NAME", 'ООО "Демо Коммерция"')
+COMPANY_INN = os.getenv("COMPANY_INN", "7701234567")
+COMPANY_KPP = os.getenv("COMPANY_KPP", "770101001")
+COMPANY_ADDRESS = os.getenv("COMPANY_ADDRESS", "109000, г. Москва, ул. Примерная, д. 1")
+COMPANY_PHONE = os.getenv("COMPANY_PHONE", "+7 (495) 000-00-00")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
